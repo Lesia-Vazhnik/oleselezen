@@ -31,14 +31,6 @@ def terminate():
     sys.exit()
 
 
-def flower_move(self):
-    self.rect = self.f.get_rect()
-    self.dx = 1
-    if pygame.sprite.spritecollideany(flower_group, walls_group):
-        self.dx = -self.dx
-    self.rect = self.rect.move(self.dx, 0)
-
-
 def start_screen():
     intro_text = ["начало игры"]
     fon = pygame.transform.scale(load_image('start.jpg'), (width, height))
@@ -71,6 +63,8 @@ def final_screen():
     screen.blit(final, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 50
+    pygame.mixer.music.load('final.mp3')
+    pygame.mixer.music.play(1)
     for line in intro_text:
         string_rendered = font.render(line, 1, pygame.Color('black'))
         intro_rect = string_rendered.get_rect()
@@ -88,6 +82,8 @@ def lose_screen(width, height):
     lose = pygame.transform.scale(load_image('over.jpg'), (width, height))
     screen.blit(lose, (0, 0))
     font = pygame.font.Font(None, 30)
+    pygame.mixer.music.load('game over.mp3')
+    pygame.mixer.music.play(1)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
