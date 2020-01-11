@@ -31,6 +31,14 @@ def terminate():
     sys.exit()
 
 
+def flower_move(self):
+    self.rect = self.f.get_rect()
+    self.dx = 1
+    if pygame.sprite.spritecollideany(flower_group, walls_group):
+        self.dx = -self.dx
+    self.rect = self.rect.move(self.dx, 0)
+
+
 def start_screen():
     intro_text = ["начало игры"]
     fon = pygame.transform.scale(load_image('start.jpg'), (width, height))
@@ -53,13 +61,12 @@ def start_screen():
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return  # начинаем игру
         pygame.display.flip()
-        clock.tick(FPS)
 
 
 def final_screen():
     intro_text = ["Congratulations", 'You are winner!']
     fi = load_image('final.png')
-    final = pygame.transform.scale(fi, (750, 750))
+    final = pygame.transform.scale(fi, (690, 713))
     screen.blit(final, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 50
@@ -91,7 +98,7 @@ def lose_screen(width, height):
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return  # начинаем игру
         pygame.display.flip()
-        clock.tick(FPS)
+
 
 
 def load_level(filename):
@@ -134,7 +141,6 @@ class Flower(pygame.sprite.Sprite):
         elif self.rect.x < 0 or self.rect.x >= width - tile_width:
             self.dx = -self.dx
         self.rect = self.rect.move(self.dx, 0)
-
 
 
 class Tile(pygame.sprite.Sprite):
@@ -252,7 +258,7 @@ while running:
             tile_width = tile_height = 35
             r = load_image('rock.png')
             rock = pygame.transform.scale(r, (tile_width, tile_height))
-            e = load_image('grass.jpg')
+            e = load_image('wood.png')
             empty = pygame.transform.scale(e, (tile_width, tile_height))
             f = load_image('flower.jpg')
             flower = pygame.transform.scale(f, (tile_width, tile_height))
@@ -265,12 +271,12 @@ while running:
             player, level_x, level_y, flower = generate_level(load_level(random.choice(MEDIUM)))
             u = 'medium'
         elif pygame.sprite.spritecollideany(player, portal_group) and u == 'medium':
-            size = width, height = 750, 750
+            size = width, height = 690, 713
             screen = pygame.display.set_mode(size)
-            tile_width = tile_height = 25
-            r = load_image('rock.png')
+            tile_width = tile_height = 23
+            r = load_image('3lvl.png')
             rock = pygame.transform.scale(r, (tile_width, tile_height))
-            e = load_image('grass.jpg')
+            e = load_image('carpet.jpeg')
             empty = pygame.transform.scale(e, (tile_width, tile_height))
             f = load_image('flower.jpg')
             flower = pygame.transform.scale(f, (tile_width, tile_height))
