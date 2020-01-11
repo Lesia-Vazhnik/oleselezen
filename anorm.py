@@ -31,20 +31,14 @@ def terminate():
     sys.exit()
 
 
-def flower_move(self):
-    self.rect = self.f.get_rect()
-    self.dx = 1
-    if pygame.sprite.spritecollideany(flower_group, walls_group):
-        self.dx = -self.dx
-    self.rect = self.rect.move(self.dx, 0)
-
-
 def start_screen():
     intro_text = ["начало игры"]
     fon = pygame.transform.scale(load_image('start.jpg'), (width, height))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 50
+    pygame.mixer.music.load('start.mp3')
+    pygame.mixer.music.play(1)
     for line in intro_text:
         string_rendered = font.render(line, 1, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
@@ -54,6 +48,30 @@ def start_screen():
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+
+
+def info_screen():
+    fon = pygame.transform.scale(load_image('info.jpg'), (width, height))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 30)
+
+
+def choose_screen():
+    ch = load_image('info.jpg')
+    fo = pygame.transform.scale(ch, (width, height))
+    screen.blit(fo, (0, 0))
+    font = pygame.font.Font(None, 30)
+    b1 = load_image('31.png')
+    pygame.draw.rect(screen, (255, 255, 255), (20, 250, 140, 100), 0)
+    pygame.draw.rect(screen, (255, 255, 255), (200, 250, 140, 100), 0)
+    pygame.draw.rect(screen, (255, 255, 255), (380, 250, 140, 100), 0)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -124,6 +142,7 @@ tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 walls_group = pygame.sprite.Group()
 flower_group = pygame.sprite.Group()
+flower2_group = pygame.sprite.Group()
 lava_group = pygame.sprite.Group()
 portal_group = pygame.sprite.Group()
 
@@ -142,6 +161,20 @@ class Flower(pygame.sprite.Sprite):
             self.dx = -self.dx
         self.rect = self.rect.move(self.dx, 0)
 
+
+class Flower_vert(pygame.sprite.Sprite):
+    def __init__(self, image, x, y):
+        super().__init__(flower_group, all_sprites)
+        self.image = pygame.transform.scale(image, (tile_width, tile_height))
+        self.rect = self.image.get_rect().move(tile_width * x, tile_height * y)
+        self.dx = 1
+
+    def update(self):
+        if pygame.sprite.spritecollideany(self, walls_group) or pygame.sprite.spritecollideany(self, lava_group):
+            self.dx = -self.dx
+        elif self.rect.x < 0 or self.rect.x >= width - tile_width:
+            self.dx = -self.dx
+        self.rect = self.rect.move(0, self.dx)
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
@@ -189,18 +222,20 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
 
 def generate_level(level):
-    new_player, x, y, flower = None, None, None, None
+    new_player, x, y, flower, flower2 = None, None, None, None, None
     for sprite in walls_group:
         sprite.kill()
     for sprite in lava_group:
         sprite.kill()
     for sprite in flower_group:
         sprite.kill()
+    for sprite in flower2_group:
+        sprite.kill()
     for sprite in portal_group:
         sprite.kill()
     for y in range(len(level)):
         for x in range(len(level[y])):
-            if level[y][x] == '.' or level[y][x] == '*':
+            if level[y][x] == '.' or level[y][x] == '*' or level[y][x] == '+':
                 Tile('empty', x, y)
             elif level[y][x] == '#':
                 Tile('wall', x, y)
@@ -218,13 +253,18 @@ def generate_level(level):
                 x1 = x
                 y1 = y
                 flower = Flower(load_image("flower.jpg", -1), x1, y1)
+            elif level[y][x] == '+':
+                x2 = x
+                y2 = y
+                flower2 = Flower_vert(load_image("flower2.png", -1), x2, y2)
     new_player = AnimatedSprite(load_image("character.jpg"), 6, 3, xx, yy)
-    return new_player, xx, yy, flower
+    return new_player, xx, yy, flower, flower2
 
 
-player, level_x, level_y, flower = generate_level(load_level(random.choice(EASY)))
+player, level_x, level_y, flower, flower2 = generate_level(load_level(random.choice(EASY)))
 u = 'easy'
 start_screen()
+choose_screen()
 running = True
 
 while running:
@@ -261,6 +301,8 @@ while running:
             e = load_image('wood.png')
             empty = pygame.transform.scale(e, (tile_width, tile_height))
             f = load_image('flower.jpg')
+            empty = pygame.transform.scale(e, (tile_width, tile_height))
+            fl = load_image('flower2.png')
             flower = pygame.transform.scale(f, (tile_width, tile_height))
             l = load_image('lava.png')
             lava = pygame.transform.scale(l, (tile_width, tile_height))
@@ -268,7 +310,7 @@ while running:
             portal = pygame.transform.scale(p, (tile_width, tile_height))
             tile_images = {'wall': rock, 'empty': empty,
                            'flower': flower, 'lava': lava, 'portal': portal}
-            player, level_x, level_y, flower = generate_level(load_level(random.choice(MEDIUM)))
+            player, level_x, level_y, flower, flower2 = generate_level(load_level(random.choice(MEDIUM)))
             u = 'medium'
         elif pygame.sprite.spritecollideany(player, portal_group) and u == 'medium':
             size = width, height = 690, 713
@@ -279,14 +321,15 @@ while running:
             e = load_image('carpet.jpeg')
             empty = pygame.transform.scale(e, (tile_width, tile_height))
             f = load_image('flower.jpg')
+            empty = pygame.transform.scale(e, (tile_width, tile_height))
+            fl = load_image('flower2.png')
             flower = pygame.transform.scale(f, (tile_width, tile_height))
             l = load_image('lava.png')
             lava = pygame.transform.scale(l, (tile_width, tile_height))
             p = load_image('portal.png')
             portal = pygame.transform.scale(p, (tile_width, tile_height))
-            tile_images = {'wall': rock, 'empty': empty,
-                           'flower': flower, 'lava': lava, 'portal': portal}
-            player, level_x, level_y, flower = generate_level(load_level(random.choice(HARD)))
+            tile_images = {'wall': rock, 'empty': empty, 'lava': lava, 'portal': portal}
+            player, level_x, level_y, flower, flower2 = generate_level(load_level(random.choice(HARD)))
             u = 'hard'
         elif pygame.sprite.spritecollideany(player, portal_group) and u == 'hard':
             final_screen()
@@ -301,16 +344,20 @@ while running:
             e = load_image('grass.jpg')
             empty = pygame.transform.scale(e, (tile_width, tile_height))
             f = load_image('flower.jpg')
+            empty = pygame.transform.scale(e, (tile_width, tile_height))
+            fl = load_image('flower2.png')
             flower = pygame.transform.scale(f, (tile_width, tile_height))
             l = load_image('lava.png')
             lava = pygame.transform.scale(l, (tile_width, tile_height))
             p = load_image('portal.png')
             portal = pygame.transform.scale(p, (tile_width, tile_height))
-            tile_images = {'wall': rock, 'empty': empty,
-                           'flower': flower, 'lava': lava, 'portal': portal}
-            player, level_x, level_y, flower = generate_level(load_level(random.choice(EASY)))
+            tile_images = {'wall': rock, 'empty': empty, 'lava': lava, 'portal': portal}
+            player, level_x, level_y, flower, flower2 = generate_level(load_level(random.choice(EASY)))
             u = 'easy'
+    pygame.mixer.music.stop()
     for flower in flower_group:
+        flower.update()
+    for flower in flower2_group:
         flower.update()
     clock.tick(FPS)
     screen.fill((255, 255, 255))
